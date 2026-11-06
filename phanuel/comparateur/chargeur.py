@@ -1,84 +1,80 @@
 import csv
 import json
-import openpyxl
 from pathlib import Path
-from typing import Optional
+
+import openpyxl
+
 
 class Chargeur:
+    """Lit les fichiers sources et renvoie des données BRUTES (listes de dict)."""
+
     def __init__(self, data_dir: Path):
         self.data_dir = data_dir
 
-    def charger_marche_lagune(self, chemin: Path) -> list[dict]:
-        """Retourne les données BRUTES de marche_lagune.csv"""
-        articles = []
-        with open(chemin, encoding="utf-8-sig", newline="") as f:
-            lecteur = csv.DictReader(f, delimiter=";")
-            for ligne in lecteur:
-                articles.append({
-                    "reference": ligne.get("reference", ""),
-                    "designation": ligne.get("designation", ""),
-                    "prix": ligne.get("prix", ""),  # Texte brut ("102 900 FCFA")
-                    "disponibilite": ligne.get("disponibilite", ""),
-                    "note_clients": ligne.get("note_clients", ""),
-                    "nb_avis": ligne.get("nb_avis", ""),
-                    "enseigne": "Marché Lagune"
-                })
-        return articles
+    # --- Utilitaires ---
+    def _chemin(self, nom_fichier: str) -> Path:
+        chemin = self.data_dir / nom_fichier
+        if not chemin.is_file():
+            raise ValueError(f"Fichier introuvable : {chemin}")
+        return chemin
 
-    def charger_baobab_shop(self, chemin: Path) -> list[dict]:
-        """Retourne les données BRUTES de baobab_shop.json"""
+    def _lire_csv(self, nom_fichier: str, delimiteur: str = ";") -> list[dict]:
+        chemin = self._chemin(nom_fichier)
+        try:
+            with open(chemin, encoding="utf-8-sig", newline="") as f:
+                return list(csv.DictReader(f, delimiter=delimiteur))
+        except (OSError, UnicodeDecodeError, csv.Error) as e:
+            raise ValueError(f"Erreur chargement {chemin}: {e}") from e
+
+    # --- Enseignes ---
+    def charger_marche_lagune(self, nom_fichier: str = "marche_lagune.csv") -> list[dict]:
+        lignes = self._lire_csv(nom_fichier)
+        return [{**ligne, "enseigne": "Marché Lagune"} for ligne in lignes]
+
+    def charger_baobab_shop(self, nom_fichier: str = "baobab_shop.json") -> list[dict]:
+        chemin = self._chemin(nom_fichier)
         try:
             with open(chemin, encoding="utf-8") as f:
-                return json.load(f).get("items", [])
-        except (FileNotFoundError, json.JSONDecodeError) as e:
-            raise ValueError(f"Erreur chargement {chemin}: {e}")
+                items = json.load(f).get("items", [])
+        except (OSError, json.JSONDecodeError) as e:
+            raise ValueError(f"Erreur chargement {chemin}: {e}") from e
+        return [{**item, "enseigne": "Baobab Shop"} for item in items]
 
-    def charger_comptoir_ivoire(self, chemin: Path) -> list[dict]:
-        """Retourne les données BRUTES de comptoir_ivoire.xlsx"""
+    def charger_comptoir_ivoire(
+        self,
+        nom_fichier: str = "comptoir_ivoire.xlsx",
+        feuille: str = "Tarifs octobre 2026",
+    ) -> list[dict]:
+        chemin = self._chemin(nom_fichier)
         try:
-            workbook = openpyxl.load_workbook(chemin)
-            sheet = workbook["Tarifs octobre 2026"]
-        except (FileNotFoundError, KeyError) as e:
-            raise ValueError(f"Erreur chargement {chemin}: {e}")
+            classeur = openpyxl.load_workbook(chemin, read_only=True, data_only=True)
+        except (OSError, openpyxl.utils.exceptions.InvalidFileException) as e:
+            raise ValueError(f"Erreur chargement {chemin}: {e}") from e
 
-        articles = []
-        for row in sheet.iter_rows(min_row=4, values_only=True):
-            articles.append({
-                "Code": row[0],
-                "Article": row[1],
-                "Rayon": row[2],
-                "Prix catalogue (FCFA)": row[3],
-                "Remise (%)": row[4],
-                "Quantité en rayon": row[5],
-                "Date de mise à jour": row[6],
-                "enseigne": "Comptoir Ivoire"
-            })
-        return articles
-
-    def charger_catalogue(self, chemin: Path) -> list[dict]:
-        """Retourne les données BRUTES du catalogue"""
-        produits = []
-        with open(chemin, encoding="utf-8-sig", newline="") as f:
-            lecteur = csv.DictReader(f, delimiter=";")
-            for ligne in lecteur:
-                produits.append({
-                    "produit_id": ligne.get("produit_id", ""),
-                    "nom": ligne.get("nom", ""),
-                    "categorie": ligne.get("categorie", ""),
-                    "marque": ligne.get("marque", "")
+        try:
+            if feuille not in classeur.sheetnames:
+                raise ValueError(f"Feuille '{feuille}' absente de {chemin}")
+            articles = []
+            for ligne in classeur[feuille].iter_rows(min_row=4, max_col=7, values_only=True):
+                if all(cellule is None for cellule in ligne):
+                    continue  # ligne vide : on l'ignore
+                articles.append({
+                    "Code": ligne[0],
+                    "Article": ligne[1],
+                    "Rayon": ligne[2],
+                    "Prix catalogue (FCFA)": ligne[3],
+                    "Remise (%)": ligne[4],
+                    "Quantité en rayon": ligne[5],
+                    "Date de mise à jour": ligne[6],
+                    "enseigne": "Comptoir Ivoire",
                 })
-        return produits
+            return articles
+        finally:
+            classeur.close()
 
-    def charger_historique(self, chemin: Path) -> list[dict]:
-        """Retourne les données BRUTES de historique_prix.csv"""
-        historiques = []
-        with open(chemin, encoding="utf-8-sig", newline="") as f:
-            lecteur = csv.DictReader(f)
-            for ligne in lecteur:
-                historiques.append({
-                    "date": ligne.get("date", ""),
-                    "source": ligne.get("source", ""),
-                    "produit_id": ligne.get("produit_id", ""),
-                    "prix_fcfa": ligne.get("prix_fcfa", "")
-                })
-        return historiques
+    # --- Catalogue et historique ---
+    def charger_catalogue(self, nom_fichier: str = "catalogue.csv") -> list[dict]:
+        return self._lire_csv(nom_fichier)
+
+    def charger_historique(self, nom_fichier: str = "historique_prix.csv") -> list[dict]:
+        return self._lire_csv(nom_fichier, delimiteur=",")
