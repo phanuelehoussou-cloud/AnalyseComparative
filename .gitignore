@@ -1,0 +1,94 @@
+# ==============================
+# ENVIRONNEMENT PYTHON
+# ==============================
+venv/
+env/
+.venv/
+ENV/
+
+# ==============================
+# FICHIERS PYTHON
+# ==============================
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+
+# ==============================
+# VARIABLES D'ENVIRONNEMENT
+# ==============================
+.env
+.env.*
+!.env.example
+!.env.template
+
+# ==============================
+# IDE / EDITEURS
+# ==============================
+.vscode/
+.idea/
+*.code-workspace
+
+# ==============================
+# BASES DE DONNEES
+# ==============================
+*.db
+*.sqlite
+*.sqlite3
+
+# ==============================
+# FICHIERS TEMPORAIRES
+# ==============================
+*.tmp
+*.temp
+*.log
+*.bak
+*.swp
+*.swo
+
+# ==============================
+# TESTS ET COUVERTURE
+# ==============================
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# ==============================
+# DISTRIBUTION
+# ==============================
+build/
+dist/
+*.egg-info/
+
+# ==============================
+# JUPYTER
+# ==============================
+.ipynb_checkpoints/
+
+# ==============================
+# SYSTEME
+# ==============================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ==============================
+# FICHIERS DE SORTIE
+# ==============================
+output/
+outputs/
+logs/
+
+# ==============================
+# NODE.JS (SI UTILISE)
+# ==============================
+node_modules/
+npm-debug.log*
+
+# ==============================
+# FLASK
+# ==============================
+instance/
+.webassets-cache/
