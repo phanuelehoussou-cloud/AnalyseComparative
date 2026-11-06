@@ -1,6 +1,6 @@
+from phanuel.comparateur.nettoyeur import Nettoyeur
 from pathlib import Path
-from phanuel.comparateur.chargeur import charger_csv
 
-articles = charger_csv(Path("data/marche_lagune.csv"))
-print(len(articles), "articles")
-print(articles[0])
+
+n = Nettoyeur(Path("journal.txt"))
+print(n._nettoyer_note("N/A"), n._nettoyer_note("n/a"), n._nettoyer_note("4,5"))

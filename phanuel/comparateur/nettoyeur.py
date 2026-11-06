@@ -74,7 +74,7 @@ class Nettoyeur:
                 prix_brut=self._nettoyer_nombre(brut["prix"]),
                 frais_livraison=0.0,      # livraison incluse
                 remise=0.0,
-                disponible=str(brut["disponibilite"]).strip() in ("En stock", "Stock limité"),
+                disponible=str(brut["disponibilite"]).strip().lower() in ("en stock", "stock limité"),
                 note=self._nettoyer_note(brut.get("note_clients")),
                 quantite=None,            # quantité précise inconnue
             )
@@ -127,7 +127,7 @@ class Nettoyeur:
         return float(texte)
 
     def _nettoyer_note(self, valeur) -> Optional[float]:
-        if valeur is None or str(valeur).strip() in ("", "N/A"):
+        if valeur is None or str(valeur).strip().lower() in ("", "n/a"):
             return None
         return self._nettoyer_nombre(valeur)
 
