@@ -39,12 +39,21 @@ class ComparateurPrix:
         lignes = []
         for produit_id, produit in self.produits.items():
             meilleure = self.meilleure_offre(produit_id)
+
+            # écart en % entre l'offre disponible la plus chère et la moins chère
+            disponibles = [o for o in self.offres_du_produit(produit_id) if o.disponible]
+            ecart_pct = None
+            if len(disponibles) >= 2:
+                bas, haut = disponibles[0].prix_paye, disponibles[-1].prix_paye
+                ecart_pct = (haut - bas) / bas * 100
+
             lignes.append({
                 "produit_id": produit_id,
                 "produit": produit.nom,
                 "enseigne": meilleure.enseigne if meilleure else None,
                 "prix": meilleure.prix_paye if meilleure else None,
                 "ecart": self.ecart_prix(produit_id),
+                "ecart_pct": ecart_pct,
                 "nb_offres": len(self._par_produit.get(produit_id, [])),
             })
         return lignes

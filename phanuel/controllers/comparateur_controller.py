@@ -15,7 +15,7 @@ from ..models.enseigne import ENSEIGNES_PAR_NOM
 from ..models.offre import Offre
 from ..models.produit import Produit
 
-FICHIER_CATALOGUE = "catalogue.csv"
+FICHIER_CATALOGUE = "catalogue_reference.csv"
 FICHIER_HISTORIQUE = "historique_prix.csv"
 
 

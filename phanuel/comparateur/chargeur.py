@@ -81,7 +81,7 @@ class Chargeur:
             classeur.close()
 
     # --- Catalogue et historique ---
-    def charger_catalogue(self, nom_fichier: str = "catalogue.csv") -> list[dict]:
+    def charger_catalogue(self, nom_fichier: str = "catalogue_reference.csv") -> list[dict]:
         return self._lire_csv(nom_fichier)
 
     def charger_historique(self, nom_fichier: str = "historique_prix.csv") -> list[dict]:
