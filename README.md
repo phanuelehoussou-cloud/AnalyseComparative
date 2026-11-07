@@ -122,18 +122,32 @@ Le fichier `requirements.txt` installe :
 
 ## Lancement et Utilisation
 
-Pour lancer l'application graphique, exécutez la commande :
+Pour lancer l'application, exécutez la commande :
 ```bash
 python app.py
 ```
-*(ou directement avec l'interpréteur du venv : `.\venv\Scripts\python.exe app.py`)*
+*(ou directement avec l'interpréteur de l'environnement virtuel : `.\venv\Scripts\python.exe app.py`)*
 
-### Navigation dans l'Interface Graphique (Tkinter)
-Au lancement, vous arrivez directement sur une **page d'accueil dédiée au menu** :
-1. **Saisie directe au clavier** : Tapez le numéro souhaité (`1`, `2`, `3`, `4`, `5`, `6` ou `0` pour quitter) dans le champ de saisie et appuyez sur **`[Entrée]`**.
-2. **Clic sur les cartes du menu** : Chaque option dispose d'un bouton d'accès rapide.
-3. **Bouton de retour rapide** : Sur chaque page d'analyse, cliquez sur le bouton **`⬅ Menu Principal [Échap]`** ou appuyez sur la touche **`Échap`** de votre clavier pour revenir instantanément à l'accueil.
-4. **Accès direct aux exports** : Un bouton **`📁 output/`** permet d'ouvrir directement dans votre explorateur de fichiers le dossier contenant les rapports et le fichier CSV.
+### Double Mode d'Interaction : Console Rich ou Interface Tkinter
+Dès le démarrage, l'application vous propose de choisir votre mode d'affichage préféré :
+
+```text
+Choisissez votre mode d'interaction :
+  [1] Menu Console Interactif (Terminal Rich)
+  [2] Interface Graphique (Fenêtre Tkinter Dark Slate)
+  [0] Quitter l'application
+```
+
+#### Mode 1 : Menu Console Interactif (Rich)
+* Conçu entièrement avec la bibliothèque **`rich`**, sans aucune couleur blanche monotone (palette éclatante : Cyan, Or, Vert émeraude, Orange, Magenta, Bleu ciel).
+* Navigation fluide par saisie de numéro (`1` à `6`) pour afficher les tableaux colorés, le panier, l'historique et le benchmark.
+* **Option `[7]` dans la console** : Permet de basculer à tout moment vers l'interface graphique Tkinter ! Lorsque vous fermez la fenêtre Tkinter, vous revenez automatiquement dans le menu console Rich.
+
+#### Mode 2 : Interface Graphique (Tkinter Dark Slate)
+* Page d'accueil dédiée au menu principal avec saisie au clavier (`1` à `6`) ou clic sur les cartes d'options.
+* Thème sombre raffiné **Dark Slate & Cyber Cyan/Emerald**.
+* Bouton **`⬅ Menu Principal [Échap]`** en haut de chaque écran pour revenir au menu d'un clic ou par la touche `Échap`.
+* Bouton direct **`📁 output/`** pour ouvrir le dossier contenant le fichier `comparatif.csv` et le journal.
 
 ---
 
@@ -181,7 +195,8 @@ AnalyseComparative/
     │   └── performances.py     # Chronométrage et benchmark O(1) vs O(N)
     └── views/
         ├── __init__.py
-        └── console_view.py     # Interface Tkinter Dark Slate moderne
+        ├── console_view.py           # Interface graphique Tkinter (Thème Dark Slate)
+        └── rich_console_view.py      # Menu interactif console Rich (Sans couleur blanche)
 ```
 
 ---
@@ -225,12 +240,36 @@ Pour associer chaque article au bon produit parmi les 30 du catalogue, `Rapproch
 * Le tableau complet est automatiquement généré et exporté dans `output/comparatif.csv` (délimiteur `;`, encodage `utf-8-sig` compatible avec Excel).
 
 ### 5. Synthèse par enseigne & Top 3 des gains
-* **Comptage des victoires** : Baobab Shop (9 produits gagnés), Comptoir Ivoire (8 produits gagnés), Marché Lagune (6 produits gagnés).
-* **Surcoût moyen** par rapport à l'offre la plus basse.
-* **Top 3 des produits où la comparaison génère les plus fortes économies :**
-  1. **Tecno Spark 20 (P04)** : Écart de **704 000 FCFA** (938.7 %) dû au prix aberrant de Marché Lagune.
-  2. **HP 250 G9 (P11)** : Écart de **52 800 FCFA** (14.9 %).
-  3. **Apple iPhone 13 (P09)** : Écart de **26 500 FCFA** (6.4 %).
+
+#### A. Nombre de victoires (combien de fois chaque enseigne est-elle la moins chère ?)
+* **Baobab Shop** : **9 victoires** (enseigne qui remporte le plus de produits au prix le plus bas).
+* **Comptoir Ivoire** : **8 victoires**.
+* **Marché Lagune** : **6 victoires**.
+*(Total : 23 produits disponibles chez au moins 2 enseignes).*
+
+#### B. Écart moyen de chaque enseigne par rapport au prix le plus bas (Surcoût moyen)
+Pour chaque produit comparable $i$, si $P_{\text{min}}(i)$ est le prix le plus bas disponible et $P_E(i)$ est le prix de l'enseigne $E$, le surcoût relatif en pourcentage est calculé selon la formule :
+$$\text{Surcoût \%} = \frac{P_E(i) - P_{\text{min}}(i)}{P_{\text{min}}(i)} \times 100$$
+*(Si l'enseigne est la moins chère pour ce produit, son surcoût vaut $0.0\%$.)*
+
+Voici les résultats calculés sur les 23 produits :
+
+| Enseigne | Écart moyen en % (Surcoût moyen) | Écart moyen en FCFA | Observation & Analyse |
+| :--- | :---: | :---: | :--- |
+| **Comptoir Ivoire** | **+2,81 %** | **+6 667 FCFA** | **L'enseigne la plus proche du prix le plus bas en moyenne !** Ses remises en boutique sont très avantageuses. |
+| **Baobab Shop** | **+4,67 %** | **+2 702 FCFA** | **Très compétitive** : remporte le plus grand nombre de produits (9 victoires) avec un surcoût moyen très faible. |
+| **Marché Lagune** | **+52,99 %** *(brut)*<br>*(ou **+3,79 %** corrigé)* | **+44 671 FCFA** | **Impacté par une valeur aberrante** : la référence `ML-1021` (Tecno Spark 20) est affichée à 779 000 FCFA au lieu de ~75 000 FCFA (+938,7 % à elle seule !). Hors cette anomalie, l'écart moyen réel est de **+3,79 %**. |
+
+> **Implémentation dans le code :**
+> * Calculé dans [`phanuel/comparateur/synthese.py` (méthode `par_enseigne()`)](file:///c:/Users/AHIBO/Documents/IIT_school/PYTHON/AnalyseComparative/phanuel/comparateur/synthese.py#L17-L48).
+> * Orchestré par [`phanuel/controllers/comparateur_controller.py`](file:///c:/Users/AHIBO/Documents/IIT_school/PYTHON/AnalyseComparative/phanuel/controllers/comparateur_controller.py#L76).
+> * Accessible dans l'interface Tkinter via l'écran **`[2] Synthèse`** (colonne *Surcoût moyen %*).
+> * Accessible dans le menu console Rich via l'option **`[2] Synthèse`**.
+
+#### C. Top 3 des produits où il y a le plus à gagner à comparer
+1. **Tecno Spark 20 (P04)** : Écart de **704 000 FCFA** (938.7 %) entre Baobab Shop (75 000 FCFA) et Marché Lagune (779 000 FCFA).
+2. **HP 250 G9 (P11)** : Écart de **52 800 FCFA** (14.9 %) entre Baobab Shop (354 200 FCFA) et Comptoir Ivoire (407 000 FCFA).
+3. **Apple iPhone 13 (P09)** : Écart de **26 500 FCFA** (6.4 %) entre Baobab Shop (417 200 FCFA) et Comptoir Ivoire (443 700 FCFA).
 
 ### 6. Panier de rentrée optimisé
 Le panier imposé par le sujet se compose de :
