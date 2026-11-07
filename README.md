@@ -1,4 +1,4 @@
-# Analyse Comparative de Marché — Abidjan
+# Analyse Comparative de Marché -Abidjan
 
 **Projet DA Python · L2 Computer Science · Séance 3**
 
@@ -309,4 +309,4 @@ Ce projet met en œuvre les principales étapes d'un système de traitement et d
 
 Il combine également les notions de programmation orientée objet, d'architecture MVC, de structures de données et de complexité algorithmique dans une application disposant d'interfaces console et graphique.
 
-*Projet réalisé dans le cadre du module DA Python — L2 Computer Science.*
+*Projet réalisé dans le cadre du module DA Python - L2 Computer Science.*
