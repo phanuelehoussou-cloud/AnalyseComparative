@@ -1,6 +1,7 @@
 import csv
 import json
 from pathlib import Path
+from typing import Optional
 
 import openpyxl
 
@@ -18,9 +19,16 @@ class Chargeur:
             raise ValueError(f"Fichier introuvable : {chemin}")
         return chemin
 
-    def _lire_csv(self, nom_fichier: str, delimiteur: str = ";") -> list[dict]:
+    def _detecter_delimiteur(self, chemin: Path) -> str:
+        """Devine le séparateur (; , ou tabulation) d'après la ligne d'en-tête."""
+        with open(chemin, encoding="utf-8-sig") as f:
+            entete = f.readline()
+        return max((";", ",", "\t"), key=entete.count)
+
+    def _lire_csv(self, nom_fichier: str, delimiteur: Optional[str] = None) -> list[dict]:
         chemin = self._chemin(nom_fichier)
         try:
+            delimiteur = delimiteur or self._detecter_delimiteur(chemin)
             with open(chemin, encoding="utf-8-sig", newline="") as f:
                 return list(csv.DictReader(f, delimiter=delimiteur))
         except (OSError, UnicodeDecodeError, csv.Error) as e:
@@ -77,4 +85,4 @@ class Chargeur:
         return self._lire_csv(nom_fichier)
 
     def charger_historique(self, nom_fichier: str = "historique_prix.csv") -> list[dict]:
-        return self._lire_csv(nom_fichier, delimiteur=",")
+        return self._lire_csv(nom_fichier)
