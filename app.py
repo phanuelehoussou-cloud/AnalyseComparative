@@ -1,6 +1,20 @@
-from phanuel.comparateur.nettoyeur import Nettoyeur
 from pathlib import Path
 
+from phanuel.controllers.comparateur_controller import ComparateurController
+from phanuel.views.console_view import ConsoleView
 
-n = Nettoyeur(Path("journal.txt"))
-print(n._nettoyer_note("N/A"), n._nettoyer_note("n/a"), n._nettoyer_note("4,5"))
+
+def main() -> None:
+    racine = Path(__file__).parent
+    controleur = ComparateurController(racine / "data", racine / "output")
+    vue = ConsoleView()
+    try:
+        resultats = controleur.executer()
+    except ValueError as erreur:  # fichier manquant ou illisible
+        vue.afficher_erreur(str(erreur))
+        return
+    vue.afficher_tout(resultats)
+
+
+if __name__ == "__main__":
+    main()
