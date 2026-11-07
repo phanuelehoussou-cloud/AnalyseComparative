@@ -7,7 +7,10 @@ import openpyxl
 
 
 class Chargeur:
-    """Lit les fichiers sources et renvoie des données BRUTES (listes de dict)."""
+    """Lit les fichiers sources hétérogènes (CSV, JSON, XLSX) et les charge
+
+    dans une même structure de données uniforme (listes de dictionnaires Python).
+    """
 
     def __init__(self, data_dir: Path):
         self.data_dir = data_dir
@@ -34,12 +37,14 @@ class Chargeur:
         except (OSError, UnicodeDecodeError, csv.Error) as e:
             raise ValueError(f"Erreur chargement {chemin}: {e}") from e
 
-    # --- Enseignes ---
+    # --- Enseignes individuelles ---
     def charger_marche_lagune(self, nom_fichier: str = "marche_lagune.csv") -> list[dict]:
+        """Lit le fichier CSV de Marché Lagune dans une liste de dictionnaires."""
         lignes = self._lire_csv(nom_fichier)
         return [{**ligne, "enseigne": "Marché Lagune"} for ligne in lignes]
 
     def charger_baobab_shop(self, nom_fichier: str = "baobab_shop.json") -> list[dict]:
+        """Lit le fichier JSON de Baobab Shop dans une liste de dictionnaires."""
         chemin = self._chemin(nom_fichier)
         try:
             with open(chemin, encoding="utf-8") as f:
@@ -53,6 +58,7 @@ class Chargeur:
         nom_fichier: str = "comptoir_ivoire.xlsx",
         feuille: str = "Tarifs octobre 2026",
     ) -> list[dict]:
+        """Lit le fichier Excel (.xlsx) de Comptoir Ivoire dans une liste de dictionnaires."""
         chemin = self._chemin(nom_fichier)
         try:
             classeur = openpyxl.load_workbook(chemin, read_only=True, data_only=True)
@@ -60,12 +66,14 @@ class Chargeur:
             raise ValueError(f"Erreur chargement {chemin}: {e}") from e
 
         try:
-            if feuille not in classeur.sheetnames:
-                raise ValueError(f"Feuille '{feuille}' absente de {chemin}")
+            if feuille in classeur.sheetnames:
+                feuille_obj = classeur[feuille]
+            else:
+                feuille_obj = classeur.active
             articles = []
-            for ligne in classeur[feuille].iter_rows(min_row=4, max_col=7, values_only=True):
+            for ligne in feuille_obj.iter_rows(min_row=4, max_col=7, values_only=True):
                 if all(cellule is None for cellule in ligne):
-                    continue  # ligne vide : on l'ignore
+                    continue  # ligne vide ignorée
                 articles.append({
                     "Code": ligne[0],
                     "Article": ligne[1],
@@ -79,6 +87,21 @@ class Chargeur:
             return articles
         finally:
             classeur.close()
+
+    # --- Méthode d'unification (Exigence 1 du cahier des charges) ---
+    def charger_toutes_enseignes(self) -> dict[str, list[dict]]:
+        """Point d'entrée unique qui charge les trois fichiers d'enseignes
+
+        (CSV, JSON, Excel) dans une même structure de données globale (dict[str, list[dict]]).
+        Chaque enseigne y est représentée sous le même type : une liste de dictionnaires.
+        """
+        from ..models.enseigne import ENSEIGNES_PAR_NOM
+
+        return {
+            "marche_lagune": self.charger_marche_lagune(ENSEIGNES_PAR_NOM["Marché Lagune"].fichier),
+            "baobab_shop": self.charger_baobab_shop(ENSEIGNES_PAR_NOM["Baobab Shop"].fichier),
+            "comptoir_ivoire": self.charger_comptoir_ivoire(ENSEIGNES_PAR_NOM["Comptoir Ivoire"].fichier),
+        }
 
     # --- Catalogue et historique ---
     def charger_catalogue(self, nom_fichier: str = "catalogue_reference.csv") -> list[dict]:

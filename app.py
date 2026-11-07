@@ -1,3 +1,4 @@
+import sys
 import tkinter as tk
 from pathlib import Path
 from tkinter import messagebox
@@ -9,16 +10,22 @@ from phanuel.views.console_view import TkView
 def main() -> None:
     racine = Path(__file__).parent
     controleur = ComparateurController(racine / "data", racine / "output")
+
     try:
         resultats = controleur.executer()
-    except ValueError as erreur:  # fichier manquant ou illisible
-        cache = tk.Tk()
-        cache.withdraw()
-        messagebox.showerror("Erreur", str(erreur))
-        cache.destroy()
+    except Exception as erreur:
+        print(f"[ERREUR] Échec de l'analyse : {erreur}", file=sys.stderr)
+        try:
+            cache = tk.Tk()
+            cache.withdraw()
+            messagebox.showerror("Erreur Critique", f"Impossible d'exécuter l'analyse :\n{erreur}")
+            cache.destroy()
+        except Exception:
+            pass
         return
 
-    TkView(resultats).mainloop()
+    app = TkView(resultats)
+    app.mainloop()
 
 
 if __name__ == "__main__":
